@@ -4,11 +4,18 @@ import { authRoutes } from "./routes/auth.routes";
 import { workspaceRoutes } from "./routes/workspace.routes";
 import { pageRoutes } from "./routes/page.routes";
 import { blockRoutes } from "./routes/block.routes";
+import { existsSync } from "fs";
+import { join } from "path";
+
+const isProd = process.env["NODE_ENV"] === "production";
+const clientDist = join(import.meta.dir, "../client/dist");
 
 const app = new Elysia()
   .use(
     cors({
-      origin: process.env["CLIENT_URL"] ?? "http://localhost:5173",
+      origin: isProd
+        ? (process.env["CLIENT_URL"] ?? true)
+        : (process.env["CLIENT_URL"] ?? "http://localhost:5000"),
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -28,9 +35,23 @@ const app = new Elysia()
       JSON.stringify({ error: error.message ?? "Internal server error" }),
       { status, headers: { "Content-Type": "application/json" } }
     );
-  })
-  .listen(process.env["PORT"] ?? 3000);
+  });
 
-console.log(`🚀 Server running at http://localhost:${app.server?.port}`);
+if (isProd && existsSync(clientDist)) {
+  app.get("/*", ({ request }) => {
+    const url = new URL(request.url);
+    const filePath = join(clientDist, url.pathname);
+    const indexPath = join(clientDist, "index.html");
+
+    if (existsSync(filePath) && !filePath.endsWith("/")) {
+      return Bun.file(filePath);
+    }
+    return Bun.file(indexPath);
+  });
+}
+
+app.listen(process.env["PORT"] ?? 3000);
+
+console.log(`🚀 Server running at http://localhost:${app.server?.port} (${isProd ? "production" : "development"})`);
 
 export type App = typeof app;

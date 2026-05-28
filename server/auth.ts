@@ -20,10 +20,15 @@ export const auth = betterAuth({
   },
   advanced: {
     useSecureCookies: process.env["NODE_ENV"] === "production",
-    defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
+    defaultCookieAttributes: {
+      httpOnly: true,
+      sameSite: process.env["NODE_ENV"] === "production" ? "none" : "lax",
+      secure: process.env["NODE_ENV"] === "production",
+    },
   },
   trustedOrigins: [
     process.env["CLIENT_URL"] ?? "http://localhost:5000",
+    ...(process.env["REPLIT_APP_URL"] ? [process.env["REPLIT_APP_URL"]] : []),
   ],
 });
 
