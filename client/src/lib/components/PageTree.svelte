@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { PageNode } from "$lib/stores/workspace.store";
+  import PageTree from "./PageTree.svelte";
+  import type { PageNode } from "$lib/stores/workspace.store.svelte";
 
   interface Props {
     nodes: PageNode[];
@@ -57,7 +58,7 @@
     </div>
 
     {#if expanded.has(node.id) && node.children.length > 0}
-      <svelte:self
+      <PageTree
         nodes={node.children}
         depth={depth + 1}
         {currentPageId}

@@ -1,10 +1,9 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import Sidebar from "$lib/components/Sidebar.svelte";
   import Editor from "./Editor.svelte";
-  import { workspaceStore, fetchWorkspaces } from "$lib/stores/workspace.store";
-  import { authState, signOut } from "$lib/stores/auth.store";
-  import { onMount } from "svelte";
-  import type { Workspace } from "@shared/types";
+  import { workspaceStore } from "$lib/stores/workspace.store.svelte";
+  import { authStore } from "$lib/stores/auth.store.svelte";
 
   interface Props {
     onSignOut: () => void;
@@ -17,7 +16,7 @@
   let creatingWorkspace = $state(false);
 
   onMount(async () => {
-    await fetchWorkspaces();
+    await workspaceStore.fetchWorkspaces();
     if (workspaceStore.workspaces.length === 0) {
       showCreateWorkspace = true;
     }
@@ -36,14 +35,14 @@
       if (!res.ok) throw new Error("Failed to create workspace");
       newWorkspaceName = "";
       showCreateWorkspace = false;
-      await fetchWorkspaces();
+      await workspaceStore.fetchWorkspaces();
     } finally {
       creatingWorkspace = false;
     }
   }
 
   async function handleSignOut(): Promise<void> {
-    await signOut();
+    await authStore.signOut();
     onSignOut();
   }
 </script>
@@ -60,7 +59,6 @@
         placeholder="My Workspace"
         bind:value={newWorkspaceName}
         onkeydown={e => e.key === "Enter" && handleCreateWorkspace()}
-        autofocus
       />
       <button
         class="btn btn-primary"
@@ -84,7 +82,7 @@
           {workspaceStore.currentWorkspace?.name ?? ""} {currentPageId ? "›" : ""}
         </div>
         <div class="top-actions">
-          <span class="user-name">{authState.user?.name}</span>
+          <span class="user-name">{authStore.user?.name}</span>
           <button class="btn btn-ghost" onclick={handleSignOut}>Sign out</button>
         </div>
       </header>
@@ -209,7 +207,5 @@
     color: var(--color-text);
   }
 
-  .welcome p {
-    font-size: 13px;
-  }
+  .welcome p { font-size: 13px; }
 </style>

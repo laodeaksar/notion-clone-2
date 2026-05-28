@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { authClient } from "$lib/stores/auth.store";
+  import { authClient } from "$lib/stores/auth.store.svelte";
   import * as v from "valibot";
   import { SignInSchema, SignUpSchema } from "@shared/schemas";
 

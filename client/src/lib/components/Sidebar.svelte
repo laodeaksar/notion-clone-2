@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { workspaceStore, fetchWorkspaces, createPage, deletePage, selectWorkspace } from "$lib/stores/workspace.store";
   import PageTree from "./PageTree.svelte";
+  import { workspaceStore } from "$lib/stores/workspace.store.svelte";
   import type { Workspace } from "@shared/types";
 
   interface Props {
@@ -19,7 +19,7 @@
     if (!ws || !newPageTitle.trim()) return;
     creatingPage = true;
     try {
-      const page = await createPage({ workspaceId: ws.id, title: newPageTitle.trim() });
+      const page = await workspaceStore.createPage({ workspaceId: ws.id, title: newPageTitle.trim() });
       newPageTitle = "";
       onPageSelect(page.id);
     } finally {
@@ -29,13 +29,13 @@
 
   async function handleDelete(id: string): Promise<void> {
     if (!confirm("Delete this page?")) return;
-    await deletePage(id);
+    await workspaceStore.deletePage(id);
     if (currentPageId === id) onPageSelect("");
   }
 
   async function handleSelectWorkspace(ws: Workspace): Promise<void> {
     showWorkspaceMenu = false;
-    await selectWorkspace(ws);
+    await workspaceStore.selectWorkspace(ws);
   }
 </script>
 
@@ -125,9 +125,7 @@
     text-align: left;
   }
 
-  .workspace-btn:hover {
-    background: rgba(55 53 47 / 0.06);
-  }
+  .workspace-btn:hover { background: rgba(55 53 47 / 0.06); }
 
   .workspace-icon { font-size: 16px; }
 
@@ -138,10 +136,7 @@
     white-space: nowrap;
   }
 
-  .chevron {
-    font-size: 10px;
-    color: var(--color-text-muted);
-  }
+  .chevron { font-size: 10px; color: var(--color-text-muted); }
 
   .workspace-dropdown {
     position: absolute;
@@ -169,9 +164,7 @@
   }
 
   .workspace-option:hover,
-  .workspace-option.selected {
-    background: var(--color-surface);
-  }
+  .workspace-option.selected { background: var(--color-surface); }
 
   .sidebar-pages {
     flex: 1;
@@ -200,19 +193,9 @@
     border-top: 1px solid var(--color-border);
   }
 
-  .add-page-row {
-    display: flex;
-    gap: 6px;
-  }
+  .add-page-row { display: flex; gap: 6px; }
 
-  .add-page-input {
-    font-size: 12px;
-    padding: 6px 8px;
-  }
+  .add-page-input { font-size: 12px; padding: 6px 8px; }
 
-  .add-btn {
-    padding: 6px 12px;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+  .add-btn { padding: 6px 12px; font-size: 16px; flex-shrink: 0; }
 </style>

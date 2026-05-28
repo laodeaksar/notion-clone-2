@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Collaboration from "@tiptap/extension-collaboration";
@@ -7,9 +7,9 @@
   import Placeholder from "@tiptap/extension-placeholder";
   import Image from "@tiptap/extension-image";
   import { createClient } from "@liveblocks/client";
-  import LiveblocksProvider from "@liveblocks/yjs";
+  import { LiveblocksYjsProvider } from "@liveblocks/yjs";
   import * as Y from "yjs";
-  import { authState } from "$lib/stores/auth.store";
+  import { authStore } from "$lib/stores/auth.store.svelte";
 
   interface Props {
     pageId: string;
@@ -39,7 +39,7 @@
 
     const ydoc = new Y.Doc();
     const { room, leave } = liveblocksClient.enterRoom(roomId);
-    const provider = new LiveblocksProvider(room, ydoc);
+    const provider = new LiveblocksYjsProvider(room, ydoc);
 
     provider.on("sync", (synced: boolean) => { isConnected = synced; });
 
@@ -53,7 +53,7 @@
         CollaborationCursor.configure({
           provider,
           user: {
-            name: authState.user?.name ?? "Anonymous",
+            name: authStore.user?.name ?? "Anonymous",
             color: `hsl(${Math.floor(Math.random() * 360)} 70% 50%)`,
           },
         }),
@@ -74,76 +74,51 @@
   });
 
   function cmd(action: () => boolean | void) {
-    return (e: MouseEvent) => {
-      e.preventDefault();
-      action();
-    };
+    return (e: MouseEvent) => { e.preventDefault(); action(); };
   }
 </script>
 
 <div class="editor-wrapper">
   <div class="toolbar" role="toolbar" aria-label="Text formatting">
     {#if editor}
-      <button
-        class="tb" class:active={editor.isActive("bold")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleBold().run())}
-        title="Bold">
+      <button class="tb" class:active={editor.isActive("bold")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleBold().run())} title="Bold">
         <strong>B</strong>
       </button>
-      <button
-        class="tb" class:active={editor.isActive("italic")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleItalic().run())}
-        title="Italic">
+      <button class="tb" class:active={editor.isActive("italic")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleItalic().run())} title="Italic">
         <em>I</em>
       </button>
-      <button
-        class="tb" class:active={editor.isActive("strike")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleStrike().run())}
-        title="Strikethrough">
+      <button class="tb" class:active={editor.isActive("strike")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleStrike().run())} title="Strike">
         <s>S</s>
       </button>
-      <button
-        class="tb" class:active={editor.isActive("code")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleCode().run())}
-        title="Inline code">
+      <button class="tb" class:active={editor.isActive("code")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleCode().run())} title="Code">
         <code>`</code>
       </button>
       <span class="sep"></span>
       {#each [1, 2, 3] as level}
-        <button
-          class="tb" class:active={editor.isActive("heading", { level })}
+        <button class="tb" class:active={editor.isActive("heading", { level })}
           onmousedown={cmd(() => editor?.chain().focus().toggleHeading({ level: level as 1|2|3 }).run())}
-          title="Heading {level}">
-          H{level}
+          title="Heading {level}">H{level}
         </button>
       {/each}
       <span class="sep"></span>
-      <button
-        class="tb" class:active={editor.isActive("bulletList")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleBulletList().run())}
-        title="Bullet list">
+      <button class="tb" class:active={editor.isActive("bulletList")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleBulletList().run())} title="Bullet list">
         • List
       </button>
-      <button
-        class="tb" class:active={editor.isActive("orderedList")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleOrderedList().run())}
-        title="Ordered list">
+      <button class="tb" class:active={editor.isActive("orderedList")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleOrderedList().run())} title="Ordered list">
         1. List
       </button>
-      <button
-        class="tb" class:active={editor.isActive("codeBlock")}
-        onmousedown={cmd(() => editor?.chain().focus().toggleCodeBlock().run())}
-        title="Code block">
-        { "</>" }
-      </button>
-      <button
-        class="tb"
-        onmousedown={cmd(() => editor?.chain().focus().setHorizontalRule().run())}
-        title="Divider">
-        —
+      <button class="tb" class:active={editor.isActive("codeBlock")}
+        onmousedown={cmd(() => editor?.chain().focus().toggleCodeBlock().run())} title="Code block">
+        {"</>"}
       </button>
     {/if}
-    <span class="ml-auto flex items-center gap-2">
+    <span class="status-row">
       <span class="dot" class:live={isConnected}></span>
       <span class="status-text">{isConnected ? "Live" : "Connecting…"}</span>
     </span>
@@ -153,12 +128,7 @@
 </div>
 
 <style>
-  .editor-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-  }
+  .editor-wrapper { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 
   .toolbar {
     display: flex;
@@ -185,48 +155,19 @@
     color: var(--color-text);
     transition: background 0.1s;
   }
-
   .tb:hover { background: rgba(55 53 47 / 0.08); }
-  .tb.active {
-    background: rgba(35 131 226 / 0.12);
-    color: var(--color-accent);
-  }
+  .tb.active { background: rgba(35 131 226 / 0.12); color: var(--color-accent); }
 
-  .sep {
-    width: 1px;
-    height: 18px;
-    background: var(--color-border);
-    margin: 0 4px;
-    flex-shrink: 0;
-  }
+  .sep { width: 1px; height: 18px; background: var(--color-border); margin: 0 4px; flex-shrink: 0; }
 
-  .editor-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 48px 10%;
-  }
+  .status-row { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
-  .ml-auto { margin-left: auto; }
-  .flex { display: flex; }
-  .items-center { align-items: center; }
-  .gap-2 { gap: 8px; }
-
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--color-text-muted);
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-muted); flex-shrink: 0; transition: background 0.3s; }
   .dot.live { background: #22c55e; }
 
-  .status-text {
-    font-size: 11px;
-    color: var(--color-text-muted);
-  }
+  .status-text { font-size: 11px; color: var(--color-text-muted); }
 
-  @media (max-width: 768px) {
-    .editor-content { padding: 24px 16px; }
-  }
+  .editor-content { flex: 1; overflow-y: auto; padding: 48px 10%; }
+
+  @media (max-width: 768px) { .editor-content { padding: 24px 16px; } }
 </style>

@@ -67,10 +67,9 @@
             bind:value={titleInput}
             onblur={saveTitle}
             onkeydown={e => e.key === "Enter" && saveTitle()}
-            autofocus
           />
         {:else}
-          <h1
+          <div
             class="page-title"
             role="button"
             tabindex="0"
@@ -78,7 +77,7 @@
             onkeydown={e => e.key === "Enter" && (editingTitle = true)}
           >
             {page.title || "Untitled"}
-          </h1>
+          </div>
         {/if}
       </div>
     </div>

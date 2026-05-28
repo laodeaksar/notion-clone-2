@@ -2,31 +2,28 @@
   import { onMount } from "svelte";
   import Login from "./routes/Login.svelte";
   import Dashboard from "./routes/Dashboard.svelte";
-  import { authState, loadSession } from "$lib/stores/auth.store";
+  import { authStore } from "$lib/stores/auth.store.svelte";
 
-  onMount(loadSession);
+  onMount(() => authStore.loadSession());
 </script>
 
 <svelte:head>
   <title>Notion Clone</title>
 </svelte:head>
 
-{#if authState.loading}
+{#if authStore.loading}
   <div class="splash">
     <div class="splash-icon">📝</div>
     <div class="splash-text">Loading…</div>
   </div>
-{:else if !authState.isAuthenticated}
-  <Login onSuccess={loadSession} />
+{:else if !authStore.isAuthenticated}
+  <Login onSuccess={() => authStore.loadSession()} />
 {:else}
-  <Dashboard onSignOut={loadSession} />
+  <Dashboard onSignOut={() => authStore.loadSession()} />
 {/if}
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-  }
+  :global(body) { margin: 0; padding: 0; }
 
   .splash {
     min-height: 100vh;
@@ -38,12 +35,6 @@
     background: var(--color-surface);
   }
 
-  .splash-icon {
-    font-size: 3rem;
-  }
-
-  .splash-text {
-    font-size: 14px;
-    color: var(--color-text-muted);
-  }
+  .splash-icon { font-size: 3rem; }
+  .splash-text { font-size: 14px; color: var(--color-text-muted); }
 </style>

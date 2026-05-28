@@ -1,0 +1,3 @@
+- [Svelte 5 runes in .ts files](svelte5-runes-ts.md) — `$state` only works in `.svelte` or `.svelte.ts` files, not plain `.ts`.
+- [Better-Auth + Drizzle schema](better-auth-drizzle.md) — adapter requires specific fields; auth routes need full URL reconstruction.
+- [Liveblocks YJS export](liveblocks-yjs-export.md) — named export is `LiveblocksYjsProvider`, not a default export.
